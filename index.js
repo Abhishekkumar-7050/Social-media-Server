@@ -26,7 +26,7 @@ app.use(morgon('common'));
 app.use(cookieParser());
 app.use(cors({
     credentials:true,
-    origin:'http://localhost:3000',
+    origin:'https://social-media-client-vert.vercel.app/'
 }))
 
 
