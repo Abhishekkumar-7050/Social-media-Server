@@ -10,7 +10,7 @@ const cookieParser = require('cookie-parser')
 const cors = require('cors')
  const cloudinaryConnect = require('./cloudinary/cloudinari.js')
 // import {v2 as cloudinary} from 'cloudinary';
-
+const origin = process.env.CORS_ORIGIN
 
 cloudinaryConnect(); 
 
@@ -26,7 +26,7 @@ app.use(morgon('common'));
 app.use(cookieParser());
 app.use(cors({
     credentials:true,
-    origin:'https://social-media-client-vert.vercel.app/'
+    origin
 }))
 
 
