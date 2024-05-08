@@ -115,53 +115,114 @@ const getUserPost = async (req, res) => {
   }
 };
 
-const deleteMyProfile = async (req, res) => {
+// const deleteMyProfile = async (req, res) => {   //followers
+//   try {
+//     const curUserId = req._id;
+//     const curUser = await User.findById(curUserId);
+//     console.log("currUser", curUser);
+//     console.log("currUser", curUserId);
+
+//     // delete all post
+//     Post.deleteMany({
+//       owner: curUserId,
+//     });
+//     // remove myself from followers following
+//     curUser.followers.forEach(async (followerid) => {
+//       const follower = await User.findById(followerid);
+//       const Index = follower.followings.indexOf(curUser);
+//       follower.followings.splice(Index, 1);
+//       await follower.save();
+//     });
+
+//     // remove myself following follower
+//     curUser.followings.forEach(async (followingId) => {
+//       const following = await User.findById(followingId);
+//       const index = following.followers.indexOf(curUserId);
+//       following.followers.splice(index, 1);
+//       await User.save();
+//     });
+//     console.log(" yaha dikkat hai kya");
+    
+//     // remove myself from all likes
+//     const allPost = await Post.find();
+//     allPost.forEach(async (post) => {
+//       const index = post.likes.indexOf(curUserId);
+//       post.likes.splice(index, 1);
+//       await post.save();
+//     });
+//     // delete user
+//     await curUser.deleteOne();
+
+//     res.clearCookie("jwt", {
+//       httpOnly: true,
+//       secure: true,
+//     });
+//     return res.send(success(200, "User Deleted"));
+//   } catch (e) {
+//     console.log("error is :", e);
+//     res.send(error(500, e.massage));
+//   }
+// };
+
+const deleteMyProfile = async (req , res) => {
   try {
-    const curUserId = req._id;
-    const curUser = await User.findById(curUserId);
-    console.log("currUser", curUser);
-    console.log("currUser", curUserId);
+      const userId  = req._id  ; 
+      const user  = await User.findById(userId) ; 
+      if(!user) {
+          return res.send(error(404 , "user is not found")) ; 
+      }
+      // remove this user from its followers account 
+      const followers = user.followers ; 
+      for (let  i = 0 ; i < followers.length ; i++) {
+          const currUser  = await User.findById(followers[i]) ; 
+          // delete id of user from follwing of currUser 
+          const index = currUser.followings.indexOf(userId) ; 
+          currUser.followings.splice(index , 1) ; 
+          await currUser.save() ; 
+      }
+      // remove this user from its followings 
+      const followings = user.followings ; 
+      for (let i = 0 ; i < followings.length ; i++) {
+          // delete id of user from follwers of currUser 
+          const currUser =  await User.findById(followings[i]) ; 
+          const index = currUser.followers.indexOf(userId) ; 
+          currUser.followers.splice(index , 1 ) ; 
+          await currUser.save() ; 
+      } 
 
-    // delete all post
-    Post.deleteMany({
-      owner: curUserId,
-    });
-    // remove myself from followers following
-    curUser.followers.forEach(async (followerid) => {
-      const follower = await User.findById(followerid);
-      const Index = follower.followings.indexOf(curUser);
-      follower.followings.splice(Index, 1);
-      await follower.save();
-    });
-
-    // remove myself following follower
-    curUser.followings.forEach(async (followingId) => {
-      const following = await User.findById(followingId);
-      const index = following.followers.indexOf(curUserId);
-      following.followers.splice(index, 1);
-      await User.save();
-    });
-
-    // remove myself from all likes
-    const allPost = await Post.find();
-    allPost.forEach(async (post) => {
-      const index = post.likes.indexOf(curUserId);
-      post.likes.splice(index, 1);
-      await post.save();
-    });
-    // delete user
-    await curUser.deleteOne();
-
-    res.clearCookie("jwt", {
-      httpOnly: true,
-      secure: true,
-    });
-    return res.send(success(200, "User Deleted"));
+      // delete post of this user 
+      const posts = user.posts ; 
+      for (let i = 0 ; i < posts.length ; i++) {
+        //  const post = await Post.find({_id:posts[i]}) ; 
+          await Post.deleteOne({_id:posts[i]}) ; 
+      }
+      // delete my self from likes of every post 
+      ///post which are liked by me , removed my self from them 
+      const allPost = await Post.find() ; 
+      for (let i = 0 ; i < allPost.length ; i++) {
+          const post = allPost[i] ; 
+          if(post.likes.includes(userId)){
+              const index = post.likes.indexOf(userId) ; 
+              post.likes.splice(index , 1 ) ;
+              await post.save() ;  
+          }
+      }
+     // await allPost.save() ; 
+      // delete cookie of this user also 
+      res.clearCookie('jwt' , {
+          httpOnly :true , 
+          secure : true 
+       }) ; 
+       //finally delete this user 
+      await User.deleteOne({_id:userId})
+      return res.send(success(200 , "user has been deleted successfully")) ; 
+      
   } catch (e) {
-    console.log("error is :", e);
-    res.send(error(500, e.massage));
+      return res.send(error(500 , e.message)) ; 
   }
-};
+}
+
+
 
 const getMyInfo = async (req, res) => {
   try {
